@@ -16,6 +16,7 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={{ flex: 1 }}>
+      {/* //FlashList will be more performant and same API but to ensure being able to run in expo GO will be avoided */}
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
