@@ -1,4 +1,4 @@
-import DetailsScreen from '@/screens/currencies/details';
+import DetailsScreen from '@/screens/currencies/CurrencyDetails';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function CurrencyScreen() {
