@@ -5,6 +5,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { Currency } from '@/services/api/useFetchTopCryptos';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { formatCurrency } from '@/utils/formater';
 
 const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
   const isPositive = value >= 0;
@@ -66,7 +67,7 @@ const CryptoHeader = ({ item }: { item: Currency }) => {
       </View>
       <View style={styles.cryptoPriceContainer}>
         <ThemedText style={styles.cryptoPrice} type="defaultSemiBold">
-          ${item.current_price.toFixed(2)}
+          {formatCurrency(item.current_price)}
         </ThemedText>
       </View>
     </View>

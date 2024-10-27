@@ -1,6 +1,9 @@
 import { useGetCurrencyDetails } from '@/services/api/useGetCurrencyDetails';
-import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View, ScrollView, Image, FlatList, useWindowDimensions } from 'react-native';
+import { formatCurrency, formatNumber } from '@/utils/formater';
+import React, { useMemo, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View, ScrollView, Image, FlatList, useWindowDimensions, Platform, Button } from 'react-native';
+import { Dropdown } from 'react-native-element-dropdown';
+import ErrorBoundary from 'react-native-error-boundary';
 
 //Skeletons showing the underlying screen design while be better UX but for the sake of the exercise this is enough
 const LoadingState = () => {
@@ -11,49 +14,59 @@ const LoadingState = () => {
   );
 }
 
-const formatCurrency = (amount: number | undefined, currency= 'USD', locale = 'en-US') => {
-  if (!amount) return 'N/A';
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    notation: 'compact',
-    currency: currency
-  }).format(amount);
+// First, create the new PriceSelector component
+const PriceSelector = ({
+  currencyList,
+  currentPriceMap,
+}: {
+  currencyList: [string, number][],
+  currentPriceMap: Record<string, number>,
+}) => {
+  const [selectedCurrency, setSelectedCurrency] = useState('usd');
+  const currentPrice = currentPriceMap[selectedCurrency];
+
+  const dropdownData = useMemo(() =>
+    currencyList.map(([currency]) => ({
+      label: currency.toUpperCase(),
+      value: currency,
+    })), [currencyList]
+  );
+
+  return (
+    <View style={styles.infoContainer}>
+      <Text style={styles.label}>Current Price</Text>
+      <View style={styles.priceSelector}>
+        <Text style={styles.priceText}>
+          {formatCurrency(currentPrice, selectedCurrency)}
+        </Text>
+        <Dropdown
+          style={styles.dropdown}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          data={dropdownData}
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
+          value={selectedCurrency}
+          onChange={item => {
+            setSelectedCurrency(item.value);
+          }}
+        />
+      </View>
+    </View>
+  );
 };
-
-const formatNumber = (amount: number | undefined, locale = 'en-US') => {
-  if (!amount) return 'N/A';
-  return new Intl.NumberFormat(locale, {
-    notation: 'compact',
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
-
-
 
 export default function DetailsScreen({ id }: { id?: string }) {
   const { data, error, isLoading } = useGetCurrencyDetails(id);
-  const { width } = useWindowDimensions();
+  const currencyList = useMemo(() => Object.entries(data?.market_data?.current_price || {}), [data?.market_data?.current_price] );
 
   if (isLoading) return <LoadingState />;
   if (error) return <Text>Error loading data</Text>;
 
-  const isLargeScreen = width > 600;
-
-  const infoItems = [
-    { label: "Current Price", value: `${formatCurrency(data?.market_data.current_price?.usd)}` },
-    { label: "Price (EUR)", value: `${formatCurrency(data?.market_data.current_price?.eur, 'EUR')}` },
-    { label: "Price (GBP)", value: `${formatCurrency(data?.market_data.current_price?.gbp, 'GBP')}` },
-    { label: "Market Cap", value: `${formatCurrency(data?.market_data.market_cap?.usd)}` },
-    { label: "24h Trading Volume", value: `${formatCurrency(data?.market_data.total_volume?.usd)}` },
-    { label: "24h Change", value: `${data?.market_data?.price_change_percentage_24h}%` },
-    { label: "Circulating Supply", value: `${formatNumber(data?.market_data.circulating_supply)} ${data?.symbol.toUpperCase()}` },
-    { label: "Total Supply", value: data?.market_data.total_supply ? `${formatNumber(data.market_data.total_supply)} ${data?.symbol.toUpperCase()}` : 'N/A' },
-    { label: "All-Time High", value: `${formatCurrency(data?.market_data.ath?.usd)}` },
-    { label: "All-Time Low", value: `${formatCurrency(data?.market_data.atl?.usd)}` },
-  ];
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{data?.name}</Text>
         <View style={styles.symbolContainer}>
@@ -61,20 +74,35 @@ export default function DetailsScreen({ id }: { id?: string }) {
           <Text style={styles.symbolText}>{data?.symbol.toUpperCase()}</Text>
         </View>
       </View>
-      <FlatList
-        data={infoItems}
-        renderItem={({ item }) => <InfoRow label={item.label} value={item.value} />}
-        keyExtractor={(item) => item.label}
-        numColumns={isLargeScreen ? 2 : 1}
-        columnWrapperStyle={isLargeScreen ? styles.row : undefined}
+
+      <PriceSelector
+        currencyList={currencyList}
+        currentPriceMap={data?.market_data?.current_price || {}}
       />
-    </View>
+
+      <InfoRow label="24h Change" value={`${data?.market_data?.price_change_percentage_24h}%`} />
+      <InfoRow label="24h Trading Volume" value={formatCurrency(data?.market_data.total_volume?.usd)} />
+      <InfoRow label="Market Cap" value={formatCurrency(data?.market_data.market_cap?.usd)} />
+      <InfoRow
+        label="Circulating Supply"
+        value={`${formatNumber(data?.market_data.circulating_supply)} ${data?.symbol.toUpperCase()}`}
+      />
+      <InfoRow
+        label="Total Supply"
+        value={data?.market_data.total_supply ?
+          `${formatNumber(data.market_data.total_supply)} ${data?.symbol.toUpperCase()}` :
+          'N/A'
+        }
+      />
+      <InfoRow label="All-Time High" value={formatCurrency(data?.market_data.ath?.usd)} />
+      <InfoRow label="All-Time Low" value={formatCurrency(data?.market_data.atl?.usd)} />
+    </ScrollView>
   );
 }
 
 const InfoRow = ({ label, value }: { label: string; value: string | number }) => (
   <View style={styles.infoContainer}>
-    <Text style={styles.label}>{label}: </Text>
+    <Text style={styles.label}>{label}</Text>
     <Text style={styles.value}>{value}</Text>
   </View>
 );
@@ -104,8 +132,10 @@ const styles = StyleSheet.create({
   infoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
     marginBottom: 12,
-    padding: 8,
+    padding: 16,
     backgroundColor: '#fff',
     borderRadius: 8,
     shadowColor: '#000',
@@ -147,8 +177,76 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#555',
   },
-  row: {
+  priceContainer: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  currentPrice: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    width: 100, // Fixed width for the picker
+  },
+  priceSelector: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  pickerWrapper: {
+    width: 85,  // Smaller fixed width
+    height: 35, // Fixed height
+    justifyContent: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+  },
+  picker: {
+    // width: Platform.OS === 'ios' ? '100%' : 85,
+    width:  60,
+    height: Platform.OS === 'ios' ? 35 : 35,
+    marginTop: Platform.OS === 'ios' ? -8 : 0,
+    marginLeft: Platform.OS === 'ios' ? -8 : 0,
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: 35,
+  },
+  dropdown: {
+    width:  70,
+    height: 35,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  placeholderStyle: {
+    fontSize: 14,
+    color: '#000',
+  },
+  selectedTextStyle: {
+    fontSize: 14,
+    color: '#000',
+    textTransform: 'uppercase',
   },
 });

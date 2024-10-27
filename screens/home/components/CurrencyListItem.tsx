@@ -2,8 +2,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { BlurView } from 'expo-blur';
 import { Platform, StyleSheet, useColorScheme } from 'react-native';
 
-
-
 export const CurrencyListItem = ({isLoading, error}: {isLoading: boolean, error: Error | null}) => {
   const theme = useColorScheme()
   return(
