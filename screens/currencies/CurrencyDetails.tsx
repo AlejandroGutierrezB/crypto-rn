@@ -53,7 +53,7 @@ export default function DetailsScreen({ id }: { id?: string }) {
       <InfoRow label="Market Cap" value={formatCurrency(data?.market_data.market_cap?.usd)} />
       <InfoRow
         label="Circulating Supply"
-        value={`${formatNumber(data?.market_data.circulating_supply)}}`}
+        value={`${formatNumber(data?.market_data.circulating_supply)}`}
       />
       <InfoRow
         label="Total Supply"
@@ -64,6 +64,7 @@ export default function DetailsScreen({ id }: { id?: string }) {
       />
       <InfoRow label="All-Time High" value={formatCurrency(data?.market_data.ath?.usd)} />
       <InfoRow label="All-Time Low" value={formatCurrency(data?.market_data.atl?.usd)} />
+      <View style={{paddingBottom: 60}} />
     </ScrollView>
   );
 }
