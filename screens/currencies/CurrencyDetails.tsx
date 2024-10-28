@@ -54,7 +54,7 @@ export default function DetailsScreen({ id }: { id?: string }) {
       <InfoRow
         label="Total Supply"
         value={data?.market_data.total_supply ?
-          `${formatNumber(data.market_data.total_supply)}}` :
+          `${formatNumber(data.market_data.total_supply)}` :
           'N/A'
         }
       />

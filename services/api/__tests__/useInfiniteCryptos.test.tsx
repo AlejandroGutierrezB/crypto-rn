@@ -1,8 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
-import { useInfiniteCryptos } from '../useInfiniteCryptos';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
 
-// Mock fetch or your API client
 global.fetch = jest.fn();
 
 const queryClient = new QueryClient({

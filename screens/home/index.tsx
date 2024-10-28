@@ -1,11 +1,13 @@
 import { ThemedView } from '@/components/ThemedView';
 import { MemoizedCryptoCurrencyItem } from '@/screens/home/components/CryptoCurrencyItem';
-import { CurrencyListItem } from '@/screens/home/components/CurrencyListItem';
-import { useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
-import React from 'react';
+import { CurrencyListHeader } from '@/screens/home/components/CurrencyListHeader';
+import { Currency, useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
+import { useSearchCryptos } from '@/services/api/useSearchCryptos';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     data,
     error,
@@ -13,28 +15,44 @@ export default function HomeScreen() {
     hasNextPage,
     isFetchingNextPage,
     isFetching,
+    isRefetching,
     refetch,
   } = useInfiniteCryptos();
+
+  const {
+    data: searchData,
+    error: searchError,
+    isFetching: searchIsFetching,
+  } = useSearchCryptos(searchQuery);
+
+  const combinedError = error || searchError;
+  const combinedIsFetching = isFetching || searchIsFetching;
+
+  const handleSubmitSearch = useCallback((text: string) => {
+    setSearchQuery(text);
+    refetch();
+  }, [searchQuery]);
 
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* //FlashList will be more performant and same API but to ensure being able to run in expo GO will be avoided */}
       <FlatList
-        data={data?.pages?.flat()}
+        testID='crypto-list'
+        data={searchQuery ? (searchData as unknown as Currency[]) : data?.pages?.flat()}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={<CurrencyListItem isLoading={!error && (isFetching ||isFetchingNextPage)} error={error} />}
+        ListHeaderComponent={<CurrencyListHeader isLoading={!combinedError && (combinedIsFetching ||isFetchingNextPage)} error={combinedError} handleSubmit={handleSubmitSearch} />}
         stickyHeaderIndices={[0]}
         style={{ flex: 1 }}
         contentContainerStyle={styles.listContainer}
         contentOffset={{ x: 0, y: 40 }}
         renderItem={( {item} ) => <MemoizedCryptoCurrencyItem item={item} />}
         onEndReached={() => {
-          if (hasNextPage) {
+          if (hasNextPage && !searchQuery) {
             fetchNextPage();
           }
         }}
-        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => refetch()}/>}
-        refreshing={isFetching}
+        refreshControl={searchQuery ? undefined:<RefreshControl refreshing={isRefetching} onRefresh={() => refetch()}/>}
+        refreshing={isRefetching}
         onEndReachedThreshold={0.5}
         ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color="#0000ff" /> : null}
       />

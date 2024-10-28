@@ -30,9 +30,11 @@ export interface Currency {
   last_updated:                     Date;
 }
 
-const fetchCryptos = async ({ pageParam = 1 }): Promise<Currency[]> => {
-  const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=7d&page=${pageParam}`
+const fetchCryptos = async (pageParam = 1 ): Promise<Currency[]> => {
+  const url =
+  `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&price_change_percentage=7d&page=${pageParam}`;
+
+  const response = await fetch(url
   );
 
   if (response.status === 429) {
@@ -49,7 +51,7 @@ const fetchCryptos = async ({ pageParam = 1 }): Promise<Currency[]> => {
 export const useInfiniteCryptos = () => {
   return useInfiniteQuery({
     queryKey: ['cryptos'],
-    queryFn: fetchCryptos,
+    queryFn: ({pageParam}) => fetchCryptos(pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage, pages) => {
       return lastPage.length === 10 ? pages.length + 1 : undefined;

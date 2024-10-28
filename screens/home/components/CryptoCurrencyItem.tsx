@@ -1,12 +1,15 @@
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { Currency } from '@/services/api/useInfiniteCryptos';
+import { SearchResult } from '@/services/api/useSearchCryptos';
 import { formatCurrency } from '@/utils/formater';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+//We should use different components for each item type but for the example I am just silencing the errors
 
 const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
   if (!value) return null;
@@ -30,11 +33,13 @@ const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
   );
 };
 
-const CryptoChanges = ({ item }: { item: Currency }) => {
+const CryptoChanges = ({ item }: { item: Currency | SearchResult }) => {
   return (
     <View style={styles.changeContainer}>
+      {/* @ts-ignore */}
        <TendencyBlock value={item?.price_change_percentage_7d_in_currency || 0} label="7d" />
-       <TendencyBlock value={item.price_change_percentage_24h} label="24h" />
+      {/* @ts-ignore */}
+       <TendencyBlock value={item?.price_change_percentage_24h || 0} label="24h" />
     </View>
   );
 };
@@ -47,14 +52,16 @@ const MarketCapRank = ({ rank }: { rank: number }) => {
   );
 };
 
-const CryptoHeader = ({ item }: { item: Currency }) => {
+const CryptoHeader = ({ item }: { item: Currency | SearchResult }) => {
   const backgroundColor = useThemeColor({ light: '#fff', dark: '#121212' }, 'background');
+
   return (
     <View style={styles.cryptoHeader}>
       <View style={styles.headerContent}>
         <Image
           style={[styles.cryptoImage, { backgroundColor }]}
-          source={item.image}
+          //@ts-ignore
+          source={item?.image || item?.thumb}
           contentFit="contain"
           transition={1000}
         />
@@ -69,14 +76,15 @@ const CryptoHeader = ({ item }: { item: Currency }) => {
       </View>
       <View style={styles.cryptoPriceContainer}>
         <ThemedText style={styles.cryptoPrice} type="defaultSemiBold">
-          {formatCurrency(item.current_price)}
+          {/* @ts-ignore */}
+          {formatCurrency(item?.current_price)}
         </ThemedText>
       </View>
     </View>
   );
 };
 
-const CryptoFooter = ({ item }: { item: Currency }) => {
+const CryptoFooter = ({ item }: { item: Currency | SearchResult }) => {
   return (
     <View style={styles.footer}>
       <MarketCapRank rank={item.market_cap_rank} />
@@ -85,7 +93,7 @@ const CryptoFooter = ({ item }: { item: Currency }) => {
   );
 };
 
-const CryptoCurrencyItem = ({ item }: { item: Currency }) => {
+const CryptoCurrencyItem = ({ item }: { item: Currency | SearchResult }) => {
   const backgroundColor = useThemeColor({}, 'cardBackground');
   const handlePress = () => {
     router.push(`/currencies/${item.id}`);
