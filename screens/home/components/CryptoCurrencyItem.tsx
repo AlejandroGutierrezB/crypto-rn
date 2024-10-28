@@ -2,12 +2,13 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ThemedText';
-import { Currency } from '@/services/api/useFetchTopCryptos';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { formatCurrency } from '@/utils/formater';
+import { Currency } from '@/services/api/useInfiniteCryptos';
 
 const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
+  if (!value) return null;
   const isPositive = value >= 0;
   return (
     <View style={styles.changeItem}>
