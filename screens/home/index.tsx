@@ -1,10 +1,9 @@
 import { ThemedView } from '@/components/ThemedView';
-import { CryptoCurrencyItem } from '@/screens/home/components/CryptoCurrencyItem';
+import { MemoizedCryptoCurrencyItem } from '@/screens/home/components/CryptoCurrencyItem';
 import { CurrencyListItem } from '@/screens/home/components/CurrencyListItem';
-import { Currency, useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
-import { router } from 'expo-router';
+import { useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
 import React from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
   const {
@@ -17,11 +16,6 @@ export default function HomeScreen() {
     refetch,
   } = useInfiniteCryptos();
 
-  const handlePress = (item: Currency) => {
-    router.push(`/currencies/${item.id}`);
-    }
-
-
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* //FlashList will be more performant and same API but to ensure being able to run in expo GO will be avoided */}
@@ -33,11 +27,7 @@ export default function HomeScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={styles.listContainer}
         contentOffset={{ x: 0, y: 40 }}
-        renderItem={( {item} ) => (
-          <TouchableOpacity onPress={() => handlePress(item)}>
-            <CryptoCurrencyItem item={item} />
-          </TouchableOpacity>
-        )}
+        renderItem={( {item} ) => <MemoizedCryptoCurrencyItem item={item} />}
         onEndReached={() => {
           if (hasNextPage) {
             fetchNextPage();

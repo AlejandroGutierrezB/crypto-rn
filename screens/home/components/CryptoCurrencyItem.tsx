@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
 import { ThemedText } from '@/components/ThemedText';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { formatCurrency } from '@/utils/formater';
 import { Currency } from '@/services/api/useInfiniteCryptos';
+import { formatCurrency } from '@/utils/formater';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import React, { memo } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
   if (!value) return null;
@@ -32,7 +33,7 @@ const TendencyBlock = ({ value, label }: { value: number, label: string }) => {
 const CryptoChanges = ({ item }: { item: Currency }) => {
   return (
     <View style={styles.changeContainer}>
-       <TendencyBlock value={item.ath_change_percentage} label="ath" />
+       <TendencyBlock value={item?.price_change_percentage_7d_in_currency || 0} label="7d" />
        <TendencyBlock value={item.price_change_percentage_24h} label="24h" />
     </View>
   );
@@ -84,15 +85,32 @@ const CryptoFooter = ({ item }: { item: Currency }) => {
   );
 };
 
-export const CryptoCurrencyItem = ({ item }: { item: Currency }) => {
-  const backgroundColor = useThemeColor({ light: '#fff', dark: '#121212' }, 'background');
+const CryptoCurrencyItem = ({ item }: { item: Currency }) => {
+  const backgroundColor = useThemeColor({}, 'cardBackground');
+  const handlePress = () => {
+    router.push(`/currencies/${item.id}`);
+  };
+
   return (
-    <View style={[styles.cryptoCard, { backgroundColor }]}>
-      <CryptoHeader item={item} />
-      <CryptoFooter item={item} />
+    <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => [
+          {
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.98 : 1 }],
+          }
+        ]}
+        android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
+      >
+          <View style={[styles.cryptoCard, { backgroundColor }]}>
+        <CryptoHeader item={item} />
+        <CryptoFooter item={item} />
     </View>
+      </Pressable>
   );
 };
+
+export const MemoizedCryptoCurrencyItem = memo(CryptoCurrencyItem);
 
 const styles = StyleSheet.create({
   cryptoCard: {
