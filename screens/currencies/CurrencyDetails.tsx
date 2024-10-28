@@ -5,6 +5,7 @@ import { useGetCurrencyDetails } from '@/services/api/useGetCurrencyDetails';
 import { formatCurrency, formatNumber } from '@/utils/formater';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {AddToFavouritesButton} from '@/components/AddToFavouritesButton';
 
 const LoadingState = () => {
   const accentColor = useThemeColor({}, 'tint');
@@ -36,6 +37,9 @@ export default function DetailsScreen({ id }: { id?: string }) {
         <View style={styles.symbolContainer}>
           {data?.image?.small && <Image source={{ uri: data.image.small }} style={styles.symbolImage} />}
           <Text style={[styles.symbolText, { color: textSecondaryColor }]}>{data?.symbol.toUpperCase()}</Text>
+          {data && <AddToFavouritesButton
+            currency={data}
+          />}
         </View>
       </View>
 
