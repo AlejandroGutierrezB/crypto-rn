@@ -10,7 +10,7 @@ export const CurrencyListItem = ({isLoading, error}: {isLoading: boolean, error:
     {isLoading ? (
         <ThemedText>Loading...</ThemedText>
       ) : error ? (
-        <ThemedText>Error fetching data</ThemedText>
+        <ThemedText style={styles.errorText}>{error.message || "Error fetching data"}</ThemedText>
       ) : null}
   </BlurView>
   )
@@ -22,5 +22,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 24,
     width: "120%",
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 export interface Currency {
   id:                               string;
@@ -29,25 +29,31 @@ export interface Currency {
   last_updated:                     Date;
 }
 
-export const fetchTopCryptos = async () => {
-  const url = new URL('https://api.coingecko.com/api/v3/coins/markets');
-  url.search = new URLSearchParams({
-    vs_currency: 'usd',
-    order: 'market_cap_desc',
-    per_page: '10',
-    page: '1',
-  }).toString();
+const fetchCryptos = async ({ pageParam = 1 }): Promise<Currency[]> => {
+  const response = await fetch(
+    `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=10&page=${pageParam}`
+  );
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  if (response.status === 429) {
+    throw new Error('Rate limit exceeded. Please try again later.');
+  }
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
   return response.json();
 };
 
-export const useFetchTopCryptos = () => useQuery<Currency[]>({
-    queryKey: ['topCryptos'],
-    queryFn: fetchTopCryptos
+export const useInfiniteCryptos = () => {
+  return useInfiniteQuery({
+    queryKey: ['cryptos'],
+    queryFn: fetchCryptos,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages) => {
+      return lastPage.length === 10 ? pages.length + 1 : undefined;
+    },
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
+};

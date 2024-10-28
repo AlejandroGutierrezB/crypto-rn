@@ -1,41 +1,70 @@
 import { ThemedView } from '@/components/ThemedView';
-import { CryptoCyrrencyItem } from '@/screens/home/components/CryptoCyrrencyItem';
+import { CryptoCurrencyItem } from '@/screens/home/components/CryptoCurrencyItem';
 import { CurrencyListItem } from '@/screens/home/components/CurrencyListItem';
-import { Currency, useFetchTopCryptos } from '@/services/api/useFetchTopCryptos';
-import { useRouter } from 'expo-router';
+import { Currency, useInfiniteCryptos } from '@/services/api/useInfiniteCryptos';
+import { router } from 'expo-router';
 import React from 'react';
-import { FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  const { data, error, isLoading } = useFetchTopCryptos();
-  const router = useRouter();
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+    refetch,
+  } = useInfiniteCryptos();
 
   const handlePress = (item: Currency) => {
     router.push(`/currencies/${item.id}`);
-  };
+    }
+
 
   return (
     <ThemedView style={{ flex: 1 }}>
       {/* //FlashList will be more performant and same API but to ensure being able to run in expo GO will be avoided */}
       <FlatList
-        data={data}
+        data={data?.pages?.flat()}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={<CurrencyListItem isLoading={isLoading} error={error} />}
+        ListHeaderComponent={<CurrencyListItem isLoading={!error && (isFetching ||isFetchingNextPage)} error={error} />}
         stickyHeaderIndices={[0]}
         style={{ flex: 1 }}
         contentContainerStyle={styles.listContainer}
         contentOffset={{ x: 0, y: 40 }}
-        renderItem={({ item }) => (
+        renderItem={( {item} ) => (
           <TouchableOpacity onPress={() => handlePress(item)}>
-            <CryptoCyrrencyItem item={item} />
+            <CryptoCurrencyItem item={item} />
           </TouchableOpacity>
         )}
+        onEndReached={() => {
+          if (hasNextPage) {
+            fetchNextPage();
+          }
+        }}
+        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => refetch()}/>}
+        refreshing={isFetching}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isFetchingNextPage ? <ActivityIndicator size="small" color="#0000ff" /> : null}
       />
     </ThemedView>
   );
 }
 
+
+
 const styles = StyleSheet.create({
+  statusContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   listContainer: {
     paddingHorizontal: 16,
     gap: 16,

@@ -83,7 +83,7 @@ const CryptoFooter = ({ item }: { item: Currency }) => {
   );
 };
 
-export const CryptoCyrrencyItem = ({ item }: { item: Currency }) => {
+export const CryptoCurrencyItem = ({ item }: { item: Currency }) => {
   const backgroundColor = useThemeColor({ light: '#fff', dark: '#121212' }, 'background');
   return (
     <View style={[styles.cryptoCard, { backgroundColor }]}>
