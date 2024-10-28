@@ -1,5 +1,6 @@
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PriceSelector } from '@/screens/currencies/PriceSelector';
+import PriceChart  from '@/screens/currencies/PriceChart';
 import { useGetCurrencyDetails } from '@/services/api/useGetCurrencyDetails';
 import { formatCurrency, formatNumber } from '@/utils/formater';
 import React, { useMemo } from 'react';
@@ -18,6 +19,7 @@ const LoadingState = () => {
 export default function DetailsScreen({ id }: { id?: string }) {
   const { data, error, isLoading } = useGetCurrencyDetails(id);
   const currencyList = useMemo(() => Object.entries(data?.market_data?.current_price || {}), [data?.market_data?.current_price]);
+
   const backgroundColor = useThemeColor({}, 'background');
   const textPrimaryColor = useThemeColor({}, 'text');
   const textSecondaryColor = useThemeColor({}, 'textSecondary');
@@ -27,6 +29,8 @@ export default function DetailsScreen({ id }: { id?: string }) {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor }]}>
+      <PriceChart id={id} />
+
       <View style={styles.headerContainer}>
         <Text style={[styles.title, { color: textPrimaryColor }]}>{data?.name}</Text>
         <View style={styles.symbolContainer}>
@@ -45,12 +49,12 @@ export default function DetailsScreen({ id }: { id?: string }) {
       <InfoRow label="Market Cap" value={formatCurrency(data?.market_data.market_cap?.usd)} />
       <InfoRow
         label="Circulating Supply"
-        value={`${formatNumber(data?.market_data.circulating_supply)} ${data?.symbol.toUpperCase()}`}
+        value={`${formatNumber(data?.market_data.circulating_supply)}}`}
       />
       <InfoRow
         label="Total Supply"
         value={data?.market_data.total_supply ?
-          `${formatNumber(data.market_data.total_supply)} ${data?.symbol.toUpperCase()}` :
+          `${formatNumber(data.market_data.total_supply)}}` :
           'N/A'
         }
       />

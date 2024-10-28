@@ -53,7 +53,7 @@ const CryptoHeader = ({ item }: { item: Currency }) => {
         <Image
           style={[styles.cryptoImage, { backgroundColor }]}
           source={item.image}
-          contentFit="cover"
+          contentFit="contain"
           transition={1000}
         />
         <View>
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    objectFit: 'contain',
   },
   cryptoHeader: {
     flexDirection: 'row',
